@@ -1,6 +1,6 @@
 #Test for naiad
 #Shuntaro Koizumi
-devtools::install("C:/Users/Shuntaro/OneDrive/NORCE LFI/naiad package")
+devtools::install_github("shunkism/naiad-package")
 library(naiad)
 library(lubridate)
 library(dplyr)
