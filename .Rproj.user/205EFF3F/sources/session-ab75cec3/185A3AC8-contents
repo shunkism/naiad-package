@@ -1,0 +1,39 @@
+#Test for naiad
+#Shuntaro Koizumi
+devtools::install("C:/Users/Shuntaro/OneDrive/NORCE LFI/naiad package")
+library(naiad)
+library(lubridate)
+library(dplyr)
+
+rm(list=ls())
+
+setwd('C:/Users/Shuntaro/OneDrive/NORCE LFI/Indeksutregning/Bunndyr - Indeksutregning/Indeksutregning/Data')
+
+#Set the raw data here
+data = read.csv('Kalking 2023.csv',sep = ';')
+
+datain <- data %>% 
+  select(River, Station, Date, Species, Value) %>% 
+  mutate(Date = dmy(Date)) %>%
+  filter(!is.na(River)) %>% 
+  filter(!is.na(Value))
+
+cleanTax(datain)
+
+#F1F2 Index
+F1F2 <-  f1f2(dataClean)
+
+#RAMI Index
+rami <-  rami(dataClean)
+
+#ASPT Index
+ASPT <-  ASPT(dataClean)
+
+#Counts number of Ephemeroptera, Plecoptera, Trichoptera, and All
+tc <-  taxaCount(dataClean)
+
+#Shannon Diversity Index
+shan <-  sdi(dataClean)
+
+#PSI
+psii <- psi(dataClean)

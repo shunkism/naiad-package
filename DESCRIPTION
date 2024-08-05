@@ -1,0 +1,13 @@
+Package: naiad
+Type: Package
+Title: naiad (Norwegian Aquatic Indices for Assessment and Diversity)
+Version: 0.0.1.0
+RoxygenNote: 7.3.1
+LazyData: true
+Imports: 
+    stringdist,
+    plyr,
+    dplyr,
+    biotic,
+    tidyr,
+    purrr
