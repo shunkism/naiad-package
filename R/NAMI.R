@@ -41,18 +41,39 @@ nami <- function(dataClean){
   #Unfortunately, some of the classifications used aren't under the same names/are at a lower classification so we will have to
   #manually add some class types... Make sure that we reference that we added these manually
   
+  dataClean$River <- stringr::str_replace_all(dataClean$River, "[^[:alnum:]]", " ")
+  dataClean$Station <- stringr::str_replace_all(dataClean$Station, "[^[:alnum:]]", " ")
+  
+  dataClean$ID <- paste(dataClean$River,dataClean$Station,dataClean$Date,sep='_')
+  ID <- unique(dataClean$ID)
+  taxalist <- unique(allTaxa$Taxagroup)
+  
+  taxaID <- data.frame()
+  for (i in 1:length(ID)) {
+    temp <- data.frame(ID = rep(ID[i],length(taxalist)),Taxagroup = taxalist)
+    taxaID <- rbind(temp,taxaID)
+  }
   taxa <- left_join(dataClean, allTaxa, by = c('Species'))
+  
   
   taxacount <- plyr::ddply(taxa, c('River','Station','Date','Taxagroup'), summarize,
                            sumValue = sum(Value))
+  
+  taxaID <- taxaID %>% tidyr::separate(ID, c('River','Station','Date'),sep ='_')
+  
+  taxacount <-merge(taxacount,taxaID,all.y = TRUE)
+  taxacount$sumValue[is.na(taxacount$sumValue)] = 0
+  
   countsum <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
                           sumValue = sum(Value))
+  
   taxacountsum <- left_join(taxacount, countsum, by = c('River','Station','Date'))
   
   taxacountsum$perc <- (taxacountsum$sumValue.x / taxacountsum$sumValue.y)*100 
   gastBivCrus <- taxacountsum[taxacountsum$Taxagroup == 'Gastropoda' | taxacountsum$Taxagroup == 'Bivalvia' | taxacountsum$Taxagroup == 'Crustacea',]
   m1 <- plyr::ddply(gastBivCrus, c('River','Station','Date'),summarize,
-                    m1 = sum(perc))
+                    m1_raw = sum(perc))
+  m1$m1_std <- (m1$m1_raw - min(m1$m1_raw)) / (max(m1$m1_raw)-min(m1$m1_raw))
   
   return(m1)
   }
