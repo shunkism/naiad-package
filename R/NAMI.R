@@ -8,7 +8,7 @@
 #' \enumerate{
 #' \item The cumulative proportions of Gastropoda, Bivalvia, and Crustacea taxa 
 #' \item The number of Bivalvia taxa 
-#' \item Number of Ephemeroptera (excluding Leptophlebiidae)
+#' \item Number of Ephemeroptera taxa (excluding Leptophlebiidae)
 #' \item Life Cycle Duration (>1 year)
 #' \item Resistance Forms (Egg Stages)
 #' \item Respiration Method (Plastron)
@@ -16,6 +16,7 @@
 #'}
 #'  After these seven metrics are calculated, each individual metric is standardized based on the inputted dataset,
 #'  using the following transformation:
+#'  
 #'  
 #'  \eqn{\text{Value} =  \dfrac{(\text{Metric Result} - \text{Lowest Metric Value})}{(\text{Highest Metric Value} - \text{Lowest Metric Value})}}
 #'  
@@ -74,6 +75,40 @@ nami <- function(dataClean){
   m1 <- plyr::ddply(gastBivCrus, c('River','Station','Date'),summarize,
                     m1_raw = sum(perc))
   m1$m1_std <- (m1$m1_raw - min(m1$m1_raw)) / (max(m1$m1_raw)-min(m1$m1_raw))
+  
+  #Metric 2: Number of Bivalvia Taxa
+  #Requires a similar list of higher taxonomic order to merge with dataClean. Thankfully we already did this in
+  #the previous metric, so we can use the same procedure.
+  #Have to make sure that we include zero counts, the same way we did for metric 1. 
+  
+  bivTaxa <- plyr::ddply(taxa, c('River','Station','Date','Taxagroup'), summarize,
+                         countTaxa = length(unique(Species)))
+  bivTaxa <-merge(bivTaxa,taxaID,all.y = TRUE)
+  bivTaxa$countTaxa[is.na(bivTaxa$countTaxa)] = 0
+  bivTaxa <- bivTaxa[bivTaxa$Taxagroup=='Bivalvia',]
+  bivTaxa$m2_raw <- bivTaxa$countTaxa
+  
+  m2 <- bivTaxa %>% 
+    dplyr::select(River, Station, Date, m2_raw) 
+  m2$m2_std <- (m2$m2_raw - min(m2$m2_raw)) / (max(m2$m2_raw)-min(m2$m2_raw))
+  
+  #Metric 3: Number of Ephemeroptera taxa, excluding Leptophlebiidae
+  #Use similar code to M2, just make sure to remove the Leptophlebiidae
+  
+  ephTaxa <- taxa[! taxa$Family=='LEPTOPHLEBIIDAE',]
+  ephTaxa <- ephTaxa[! is.na(ephTaxa$Value),]
+  
+  ephTaxa_count <- plyr::ddply(ephTaxa, c('River','Station','Date','Taxagroup'), summarize,
+                               countTaxa = length(unique(Species)))
+  
+  ephTaxa_count <- merge(ephTaxa_count,taxaID,all.y = TRUE)
+  ephTaxa_count$countTaxa[is.na(ephTaxa_count$countTaxa)] = 0
+  ephTaxa_count <- ephTaxa_count[ephTaxa_count$Taxagroup=='Ephemeroptera',]
+  ephTaxa_count$m3_raw <- ephTaxa_count$countTaxa
+  
+  m3 <- ephTaxa_count %>% 
+    dplyr::select(River, Station, Date, m3_raw) 
+  m3$m3_std <- (m3$m3_raw - min(m3$m3_raw)) / (max(m3$m3_raw)-min(m3$m3_raw))  
   
   return(m1)
   }
