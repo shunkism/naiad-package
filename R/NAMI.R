@@ -81,7 +81,7 @@ nami <- function(dataClean){
   gastBivCrus <- taxacountsum[taxacountsum$Taxagroup == 'Gastropoda' | taxacountsum$Taxagroup == 'Bivalvia' | taxacountsum$Taxagroup == 'Crustacea',]
   m1 <- plyr::ddply(gastBivCrus, c('River','Station','Date'),summarize,
                     m1_raw = sum(perc))
-  m1$m1_std <- (m1$m1_raw - min(m1$m1_raw)) / (max(m1$m1_raw)-min(m1$m1_raw))
+  m1$m1_std <- (m1$m1_raw - 0) / (18.225-0)
   
   #Metric 2: Number of Bivalvia Taxa
   #Requires a similar list of higher taxonomic order to merge with dataClean. Thankfully we already did this in
@@ -97,7 +97,7 @@ nami <- function(dataClean){
   
   m2 <- bivTaxa %>% 
     dplyr::select(River, Station, Date, m2_raw) 
-  m2$m2_std <- (m2$m2_raw - min(m2$m2_raw)) / (max(m2$m2_raw)-min(m2$m2_raw))
+  m2$m2_std <- (m2$m2_raw - 0) / (2-0)
   
   #Metric 3: Number of Ephemeroptera taxa, excluding Leptophlebiidae
   #Use similar code to M2, just make sure to remove the Leptophlebiidae
@@ -115,7 +115,9 @@ nami <- function(dataClean){
   
   m3 <- ephTaxa_count %>% 
     dplyr::select(River, Station, Date, m3_raw) 
-  m3$m3_std <- (m3$m3_raw - min(m3$m3_raw)) / (max(m3$m3_raw)-min(m3$m3_raw))  
+  m3$m3_std <- (m3$m3_raw - 0) / (8.9 - 0)  
+  
+  #Metric 4
   
   return(m1)
   }
