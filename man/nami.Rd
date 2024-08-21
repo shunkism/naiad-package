@@ -16,7 +16,7 @@ NAMI is an MMI (multimetric index) comprised of seven indices. These seven indic
 \enumerate{
 \item The cumulative proportions of Gastropoda, Bivalvia, and Crustacea taxa 
 \item The number of Bivalvia taxa 
-\item Number of Ephemeroptera (excluding Leptophlebiidae)
+\item Number of Ephemeroptera taxa (excluding Leptophlebiidae)
 \item Life Cycle Duration (>1 year)
 \item Resistance Forms (Egg Stages)
 \item Respiration Method (Plastron)
@@ -25,16 +25,24 @@ NAMI is an MMI (multimetric index) comprised of seven indices. These seven indic
  After these seven metrics are calculated, each individual metric is standardized based on the inputted dataset,
  using the following transformation:
  
+ For metrics that decrease with increasing acidity:
+ 
  \eqn{\text{Value} =  \dfrac{(\text{Metric Result} - \text{Lowest Metric Value})}{(\text{Highest Metric Value} - \text{Lowest Metric Value})}}
+ 
+ For metrics that increase with increasing acidity:
+  
+ \eqn{\text{Value} = 1 - \dfrac{(\text{Metric Result} - \text{Lowest Metric Value})}{(\text{Highest Metric Value} - \text{Lowest Metric Value})}}
+ 
  
  These standardized metrics are then combined as the mean of the 0 to 1 scores of all core metrics. 
  
  MMI values are then recalibrated using the 90th and 10th percentiles as upper and lower limits of the metrics calculated 
- within the inputted dataset. Be aware that this assumes that the inputted dataset in @param dataClean has sufficient data
+ within the inputted dataset. Be aware that this assumes that the inputted dataset in dataClean has sufficient data
  and contains reference data. 
  
- Note: For metric 1 and 2 in the list above, species name from dataClean are matched with an internal dataframe which contains
- a list of species and associated higher classifications.
+ Note: For all 7 metrics, species name from dataClean are matched with an internal dataframe which contains
+ a list of species and associated higher classifications. Check data("allTaxa") to see this list. If your species is 
+ not listed, please contact me.
 }
 \author{
 Shuntaro Koizumi, Gaute Velle
