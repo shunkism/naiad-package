@@ -33,7 +33,7 @@ NAMI is an MMI (multimetric index) comprised of seven indices. These seven indic
   
  \eqn{\text{Value} = 1 - \dfrac{(\text{Metric Result} - \text{Lowest Metric Value})}{(\text{Highest Metric Value} - \text{Lowest Metric Value})}}
  
- 
+ Valuess that are used for lowest and highest metric values in the equations above can be found in Carlson et al. 2023 (Ecol. Ind.)
  These standardized metrics are then combined as the mean of the 0 to 1 scores of all core metrics. 
  
  MMI values are then recalibrated using the 90th and 10th percentiles as upper and lower limits of the metrics calculated 
