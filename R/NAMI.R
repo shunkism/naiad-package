@@ -25,7 +25,7 @@
 #'   
 #'  \eqn{\text{Value} = 1 - \dfrac{(\text{Metric Result} - \text{Lowest Metric Value})}{(\text{Highest Metric Value} - \text{Lowest Metric Value})}}
 #'  
-#'  
+#'  Valuess that are used for lowest and highest metric values in the equations above can be found in Carlson et al. 2023 (Ecol. Ind.)
 #'  These standardized metrics are then combined as the mean of the 0 to 1 scores of all core metrics. 
 #'  
 #'  MMI values are then recalibrated using the 90th and 10th percentiles as upper and lower limits of the metrics calculated 
@@ -49,11 +49,17 @@ nami <- function(dataClean){
   #Unfortunately, some of the classifications used aren't under the same names/are at a lower classification so we will have to
   #manually add some class types... Make sure that we reference that we added these manually
   
+  #Remove special characters from river and station names, otherwise they get converted into strange strings of characters and names that can mess up some code below
   dataClean$River <- stringr::str_replace_all(dataClean$River, "[^[:alnum:]]", " ")
   dataClean$Station <- stringr::str_replace_all(dataClean$Station, "[^[:alnum:]]", " ")
   
+  #Make a unique ID code for each river/station/date so that they are all counted as a single "station"
   dataClean$ID <- paste(dataClean$River,dataClean$Station,dataClean$Date,sep='_')
   ID <- unique(dataClean$ID)
+  
+  #This basically pastes all the unique taxa groups that are expected based on the allTaxa dataframe and pastes them to each individual station
+  #This is necessary to "create" zeroes for taxa that might not be observed in either the initial inputted dataframe or in individual stations
+  
   taxalist <- unique(allTaxa$Taxagroup)
   
   taxaID <- data.frame()
@@ -61,63 +67,153 @@ nami <- function(dataClean){
     temp <- data.frame(ID = rep(ID[i],length(taxalist)),Taxagroup = taxalist)
     taxaID <- rbind(temp,taxaID)
   }
+  
+  #Merge the dataClean dataframe with the allTaxa rda file
   taxa <- left_join(dataClean, allTaxa, by = c('Species'))
   
-  
+  #Get a total number of individuals per taxa group 
   taxacount <- plyr::ddply(taxa, c('River','Station','Date','Taxagroup'), summarize,
                            sumValue = sum(Value))
   
+  #Break up the unique IDs to get the river, station, and date columns back 
   taxaID <- taxaID %>% tidyr::separate(ID, c('River','Station','Date'),sep ='_')
   
+  #merging the taxacount dataframe with the taxaID dataframe to "create" zeroes 
   taxacount <-merge(taxacount,taxaID,all.y = TRUE)
   taxacount$sumValue[is.na(taxacount$sumValue)] = 0
   
+  #Get a sum of the abundances that exist in the taxa dataframe (the merged dataclean and alltaxa dfs)
   countsum <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
                           sumValue = sum(Value))
   
+  #Merging the sum of abundances with the new taxacount that has the zero abundances
   taxacountsum <- left_join(taxacount, countsum, by = c('River','Station','Date'))
   
+  #Get a percentage (relative abundance) of each taxa vs. the total abundance within each station 
   taxacountsum$perc <- (taxacountsum$sumValue.x / taxacountsum$sumValue.y)*100 
+  
+  #make a df that has only gastropods, bivalves, and crustaceans 
   gastBivCrus <- taxacountsum[taxacountsum$Taxagroup == 'Gastropoda' | taxacountsum$Taxagroup == 'Bivalvia' | taxacountsum$Taxagroup == 'Crustacea',]
+  
+  #sum up the relative abundances of the gastropods, bivalves, and crustaceans 
   m1 <- plyr::ddply(gastBivCrus, c('River','Station','Date'),summarize,
                     m1_raw = sum(perc))
+  
+  #normalization equation
   m1$m1_std <- (m1$m1_raw - 0) / (18.225-0)
+  
+  #Calibrate numbers so that values >1 equals 1 and values <0 equals 0
+  m1$m1_std[m1$m1_std>1] = 1 
+  m1$m1_std[m1$m1_std<0] = 0 
   
   #Metric 2: Number of Bivalvia Taxa
   #Requires a similar list of higher taxonomic order to merge with dataClean. Thankfully we already did this in
   #the previous metric, so we can use the same procedure.
   #Have to make sure that we include zero counts, the same way we did for metric 1. 
   
+  #summarize taxa dataframe into the number of unique species in each station
   bivTaxa <- plyr::ddply(taxa, c('River','Station','Date','Taxagroup'), summarize,
                          countTaxa = length(unique(Species)))
+  
+  #merge the above df with the taxaID df to get the zeroes 
   bivTaxa <-merge(bivTaxa,taxaID,all.y = TRUE)
   bivTaxa$countTaxa[is.na(bivTaxa$countTaxa)] = 0
+  
+  #pull out only bivalves from the above df 
   bivTaxa <- bivTaxa[bivTaxa$Taxagroup=='Bivalvia',]
+  
+  #Create an M2 (Metric 2) column, which is the number of bivalve taxa 
   bivTaxa$m2_raw <- bivTaxa$countTaxa
   
+  #Cleaning up the output of the dataframe so it just has the river, station, date, and the raw M2 columns 
   m2 <- bivTaxa %>% 
     dplyr::select(River, Station, Date, m2_raw) 
-  m2$m2_std <- (m2$m2_raw - 0) / (2-0)
+
+  #Normalization equation 
+    m2$m2_std <- (m2$m2_raw - 0) / (2-0)
+  
+  #Calibrate numbers so that values >1 equals 1 and values <0 equals 0
+  m2$m2_std[m2$m2_std>1] = 1 
+  m2$m2_std[m2$m2_std<0] = 0 
+  
   
   #Metric 3: Number of Ephemeroptera taxa, excluding Leptophlebiidae
   #Use similar code to M2, just make sure to remove the Leptophlebiidae
   
+  #Remove the Leptophlebiids
   ephTaxa <- taxa[! taxa$Family=='LEPTOPHLEBIIDAE',]
+
+  #Remove rows that are just all NA
   ephTaxa <- ephTaxa[! is.na(ephTaxa$Value),]
   
+  #Summarize the above df so that we get a count of the unique species 
   ephTaxa_count <- plyr::ddply(ephTaxa, c('River','Station','Date','Taxagroup'), summarize,
                                countTaxa = length(unique(Species)))
   
+  #Merge with the taxaID df to "create" zeroes 
   ephTaxa_count <- merge(ephTaxa_count,taxaID,all.y = TRUE)
   ephTaxa_count$countTaxa[is.na(ephTaxa_count$countTaxa)] = 0
+  
+  #Pull out just the Ephemeroptera and create a new column that contains the counts of the Ephemeroptera-Leptophlebiidae 
   ephTaxa_count <- ephTaxa_count[ephTaxa_count$Taxagroup=='Ephemeroptera',]
   ephTaxa_count$m3_raw <- ephTaxa_count$countTaxa
   
+  #Pull out just the relevant columns, like above
   m3 <- ephTaxa_count %>% 
     dplyr::select(River, Station, Date, m3_raw) 
+  
+  #Normalization equation 
   m3$m3_std <- (m3$m3_raw - 0) / (8.9 - 0)  
   
-  #Metric 4
+  #Calibrate numbers so that values >1 equals 1 and values <0 equals 0
+  m3$m3_std[m3$m3_std>1] = 1 
+  m3$m3_std[m3$m3_std<0] = 0 
   
-  return(m1)
+  #Metric 4-7: Tachet Trait: (m4) Life Stage >1 year, (m5) Resistance Forms Egg Stages, (m6) Respiration Plastron, (m7) pH Preferendum >5-5.5 
+  #The fuzzy coding available in the Freshwater Ecology Database have been converted to proportions so that values range from 0 to 1
+  #For more information related to calculations for proportions contact Shuntaro Koizumi 
+  
+  #Convert the metrics of interest into numeric (for some reason they are imported as character, could be because of the NAs)
+  taxa$LifeCycle_grt1yr <- as.numeric(taxa$LifeCycle_grt1yr)
+  taxa$ResForm_egg <- as.numeric(taxa$ResForm_egg)
+  taxa$Resp_pls <- as.numeric(taxa$Resp_pls)
+  taxa$pHpref_grt5to5.5 <- as.numeric(taxa$pHpref_grt5to5.5)
+  
+  #Get a mean of each of the metrics so that we get a metric value for each metric and each station
+  tachet <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
+                        m4_raw = mean(LifeCycle_grt1yr, na.rm = TRUE),
+                        m5_raw = mean(ResForm_egg, na.rm = TRUE),
+                        m6_raw = mean(Resp_pls, na.rm = TRUE),
+                        m7_raw = mean(pHpref_grt5to5.5, na.rm = TRUE))
+  
+  #Normalization Equations
+  tachet$m4_std <- (tachet$m4_raw-0.091)/(0.321-0.091)
+  tachet$m5_std <- (tachet$m5_raw-0.012)/(0.258-0.012)
+  tachet$m6_std <- (tachet$m6_raw-0)/(0.051-0)
+  tachet$m7_std <- 1-((tachet$m7_raw-0.187)/(0.22-0.187))
+  
+  #Calibrate metrics so that values >1 equals 1 and values <0 equals 0
+  tachet$m4_std[tachet$m4_std>1] = 1 
+  tachet$m4_std[tachet$m4_std<0] = 0 
+  
+  tachet$m5_std[tachet$m5_std>1] = 1 
+  tachet$m5_std[tachet$m5_std<0] = 0 
+  
+  tachet$m6_std[tachet$m6_std>1] = 1 
+  tachet$m6_std[tachet$m6_std<0] = 0 
+  
+  tachet$m7_std[tachet$m7_std>1] = 1 
+  tachet$m7_std[tachet$m7_std<0] = 0 
+  
+  #Merge seven metrics into one dataframe and calculate the NAMI value by finding the mean across the seven normalized metric values
+  namimets <- merge(m1,m2)
+  namimets <- merge(namimets, m3)
+  namimets <- merge(namimets, tachet)
+  namimets$NAMI <- rowMeans(namimets[,c("m1_std","m2_std","m3_std","m4_std","m5_std","m6_std","m7_std")],na.rm = TRUE)
+  
+  #Pull out the relevant columns. We might want to consider having an option to spit out the different metric outputs, at times when things go wrong
+  nami <- namimets %>% 
+    select(River, Station, Date, NAMI)
+  
+  return(nami)
   }
