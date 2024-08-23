@@ -70,7 +70,7 @@ nami <- function(dataClean){
   }
   
   #Merge the dataClean dataframe with the allTaxa rda file
-  taxa <- left_join(dataClean, allTaxa, by = c('Species'))
+  taxa <- left_join(dataClean, allTaxa, by = c('Species'), multiple = 'any')
   
   #Get a total number of individuals per taxa group 
   taxacount <- plyr::ddply(taxa, c('River','Station','Date','Taxagroup'), summarize,
