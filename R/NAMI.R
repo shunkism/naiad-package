@@ -50,8 +50,9 @@ nami <- function(dataClean){
   #manually add some class types... Make sure that we reference that we added these manually
   
   #Remove special characters from river and station names, otherwise they get converted into strange strings of characters and names that can mess up some code below
-  dataClean$River <- stringr::str_replace_all(dataClean$River, "[^[:alnum:]]", " ")
-  dataClean$Station <- stringr::str_replace_all(dataClean$Station, "[^[:alnum:]]", " ")
+  #dataClean$River <- stringr::str_replace_all(dataClean$River, "[^[:alnum:]]", " ")
+  #dataClean$Station <- stringr::str_replace_all(dataClean$Station, "[^[:alnum:]]", " ")
+    #The above code is causing more problems than solving them so just make sure to remove special characters before using this code
   
   #Make a unique ID code for each river/station/date so that they are all counted as a single "station"
   dataClean$ID <- paste(dataClean$River,dataClean$Station,dataClean$Date,sep='_')
