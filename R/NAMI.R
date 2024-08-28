@@ -180,12 +180,76 @@ nami <- function(dataClean){
   taxa$Resp_pls <- as.numeric(taxa$Resp_pls)
   taxa$pHpref_grt5to5.5 <- as.numeric(taxa$pHpref_grt5to5.5)
   
+  taxa$sampleID <- paste(taxa$River, taxa$Station, taxa$Date, sep = '_')
+  
+  #Functional Composition Code Starts Here:
+  Inv_Sm <-  taxa %>% 
+    select(sampleID, Species, Value) 
+  
+  #There seems to be some duplication, add up the counts for duplicated taxa for different sample stations 
+  Inv_Sm <- plyr::ddply(Inv_Sm, c('sampleID','Species'),summarize,
+                        sumValue = sum(Value))
+  
+  Inv_Sm <- as.data.frame(Inv_Sm)
+  #Order inv_Sm species alphabetically
+  Inv_Sm <- Inv_Sm[order(Inv_Sm$Species),]
+  
+  Inv_Sm <-  tidyr::pivot_wider(Inv_Sm, names_from = Species, values_from = sumValue)
+  Inv_Sm[is.na(Inv_Sm)] = 0
+  
+  #Make Inv_Sm row names the sampleID and then make it into a matrix
+  Inv_Sm2 <- as.matrix(Inv_Sm)
+  Inv_Sm2 <- Inv_Sm2[,-1]
+  rownames(Inv_Sm2) <- Inv_Sm$sampleID
+  
+  #Convert inv_sm2 matrix column values into numeric
+  Inv_Sm2 <- as.data.frame(Inv_Sm2)
+  Inv_Sm2 <- sapply(Inv_Sm2, as.numeric)
+  Inv_Sm2 <- as.matrix(Inv_Sm2)  
+  
+  #Make Tachet trait matrix
+  Inv_T <- taxa %>% 
+    select(Species, LifeCycle_grt1yr,ResForm_egg,Resp_pls,pHpref_grt5to5.5)
+  Inv_T <- Inv_T[! duplicated(Inv_T$Species),]
+  
+  #Order Species in Inv_T alphabetically
+  Inv_T <- Inv_T[order(Inv_T$Species),]
+  
+  #Make Inv_T a matrix with row names as the species
+  rownames(Inv_T) <- Inv_T$Species
+  Inv_T <- Inv_T[,-1]
+  Inv_T <- as.matrix(Inv_T)
+  
+  tt <- FD::functcomp(Inv_T,Inv_Sm2)
+  
+  #Reattach the sampleID from Inv_Sm to tt
+  tt$sampleID <- Inv_Sm$sampleID
+  
+  #Get the River, Station, and Date and merge with sampleID into River, Station, and Date in tt
+  taxaIDnames <- taxa %>% 
+    select(River, Station, Date, sampleID) %>% 
+    unique()
+  
+  tt <- merge(tt,taxaIDnames,by = 'sampleID')
+  
+  #remove sampleId column by name
+  tt <- tt[ , !(names(tt) %in% c("sampleID"))]
+  
+  #Convert date to date class using lubridate
+  tt$Date <- lubridate::ymd(tt$Date)
+  
+  #convert tt to dataframe named tachet, and then change life cycle to m4_raw, resistance form to m5_raw, respiration to m6_raw, and pH to m7_raw
+  tachet <- as.data.frame(tt)
+  tachet <- tachet %>% 
+    dplyr::select(River, Station, Date, m4_raw = LifeCycle_grt1yr, m5_raw = ResForm_egg, m6_raw = Resp_pls, m7_raw = pHpref_grt5to5.5)
+  
   #Get a mean of each of the metrics so that we get a metric value for each metric and each station
-  tachet <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
-                        m4_raw = mean(LifeCycle_grt1yr, na.rm = TRUE),
-                        m5_raw = mean(ResForm_egg, na.rm = TRUE),
-                        m6_raw = mean(Resp_pls, na.rm = TRUE),
-                        m7_raw = mean(pHpref_grt5to5.5, na.rm = TRUE))
+  #tachet <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
+  #                      m4_raw = mean(LifeCycle_grt1yr, na.rm = TRUE),
+  #                      m5_raw = mean(ResForm_egg, na.rm = TRUE),
+  #                      m6_raw = mean(Resp_pls, na.rm = TRUE),
+  #                      m7_raw = mean(pHpref_grt5to5.5, na.rm = TRUE))
+  
   
   #Normalization Equations
   tachet$m4_std <- (tachet$m4_raw-0.091)/(0.321-0.091)
