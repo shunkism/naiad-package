@@ -180,7 +180,7 @@ nami <- function(dataClean){
   taxaswe$lifecycleduration_grtrthan1year <- as.numeric(taxaswe$lifecycleduration_grtrthan1year)
   taxaswe$ResForms_eggs_statoblasts <- as.numeric(taxaswe$ResForms_eggs_statoblasts)
   taxaswe$resp_plastron <- as.numeric(taxaswe$resp_plastron)
-  taxaswe$pHpreferendum_grtr5.5to6 <- as.numeric(taxaswe$pHpreferendum_grtr5.5to6)
+  taxaswe$pHpreferendum_grtr5to5.5 <- as.numeric(taxaswe$pHpreferendum_grtr5to5.5)
   
   taxaswe$sampleID <- paste(taxaswe$River, taxaswe$Station, taxaswe$Date, sep = '_')
   
