@@ -240,8 +240,8 @@ nami <- function(dataClean){
   #Conver tt df to tachet df and change the namnes of the columns of lifecyle >1 year, resistance forms egg stages,
   #respiration plastron, and pH preferendum >5-5.5 to m4_raw, m5_raw, m6_raw, and m7_raw
   tachet <- tt %>% 
-    dplyr::select(River, Station, Date, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5.5to6) %>% 
-    rename(m4_raw = lifecycleduration_grtrthan1year, m5_raw = ResForms_eggs_statoblasts, m6_raw = resp_plastron, m7_raw = pHpreferendum_grtr5.5to6)
+    dplyr::select(River, Station, Date, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5to5.5) %>% 
+    rename(m4_raw = lifecycleduration_grtrthan1year, m5_raw = ResForms_eggs_statoblasts, m6_raw = resp_plastron, m7_raw = pHpreferendum_grtr5to5.5)
   
   #Get a mean of each of the metrics so that we get a metric value for each metric and each station
   #tachet <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
