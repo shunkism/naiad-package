@@ -175,18 +175,20 @@ nami <- function(dataClean){
   #For more information related to calculations for proportions contact Shuntaro Koizumi 
   
   #Convert the metrics of interest into numeric (for some reason they are imported as character, could be because of the NAs)
-  taxa$LifeCycle_grt1yr <- as.numeric(taxa$LifeCycle_grt1yr)
-  taxa$ResForm_egg <- as.numeric(taxa$ResForm_egg)
-  taxa$Resp_pls <- as.numeric(taxa$Resp_pls)
-  taxa$pHpref_grt5to5.5 <- as.numeric(taxa$pHpref_grt5to5.5)
+  taxaswe <- left_join(dataClean, sweTax, by = c('Species' = 'Vetenskapligt namn'), multiple = 'any')
   
-  taxa$sampleID <- paste(taxa$River, taxa$Station, taxa$Date, sep = '_')
+  taxaswe$lifecycleduration_grtrthan1year <- as.numeric(taxaswe$lifecycleduration_grtrthan1year)
+  taxaswe$ResForms_eggs_statoblasts <- as.numeric(taxaswe$ResForms_eggs_statoblasts)
+  taxaswe$resp_plastron <- as.numeric(taxaswe$resp_plastron)
+  taxaswe$pHpreferendum_grtr5.5to6 <- as.numeric(taxaswe$pHpreferendum_grtr5.5to6)
+  
+  taxaswe$sampleID <- paste(taxaswe$River, taxaswe$Station, taxaswe$Date, sep = '_')
   
   #Functional Composition Code Starts Here:
-  Inv_Sm <-  taxa %>% 
+  Inv_Sm <-  taxaswe %>% 
     select(sampleID, Species, Value) 
   
-  #There seems to be some duplication, add up the counts for duplicated taxa for different sample stations 
+  #There seems to be some duplication, add up the counts for duplicated taxa for different sample statsasions 
   Inv_Sm <- plyr::ddply(Inv_Sm, c('sampleID','Species'),summarize,
                         sumValue = sum(Value))
   
@@ -196,21 +198,18 @@ nami <- function(dataClean){
   
   Inv_Sm <-  tidyr::pivot_wider(Inv_Sm, names_from = Species, values_from = sumValue)
   Inv_Sm[is.na(Inv_Sm)] = 0
+  sampID <- Inv_Sm$sampleID
+  Inv_Sm <- Inv_Sm[,-1]
   
-  #Make Inv_Sm row names the sampleID and then make it into a matrix
+  #Make Inv_Sm into a matrix
   Inv_Sm2 <- as.matrix(Inv_Sm)
-  Inv_Sm2 <- Inv_Sm2[,-1]
-  rownames(Inv_Sm2) <- Inv_Sm$sampleID
   
-  #Convert inv_sm2 matrix column values into numeric
-  Inv_Sm2 <- as.data.frame(Inv_Sm2)
-  Inv_Sm2 <- sapply(Inv_Sm2, as.numeric)
-  Inv_Sm2 <- as.matrix(Inv_Sm2)  
+  #Make Tachet trait matrix with only life cycle >1 year, resistance forms egg stages, respiration plastron, and pH preferendum >5-5.5
+  Inv_T <- taxaswe %>% 
+    select(Species, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5to5.5)
   
-  #Make Tachet trait matrix
-  Inv_T <- taxa %>% 
-    select(Species, LifeCycle_grt1yr,ResForm_egg,Resp_pls,pHpref_grt5to5.5)
-  Inv_T <- Inv_T[! duplicated(Inv_T$Species),]
+  #Remove duplicated species
+  Inv_T <- Inv_T[!duplicated(Inv_T$Species),]
   
   #Order Species in Inv_T alphabetically
   Inv_T <- Inv_T[order(Inv_T$Species),]
@@ -223,10 +222,10 @@ nami <- function(dataClean){
   tt <- FD::functcomp(Inv_T,Inv_Sm2)
   
   #Reattach the sampleID from Inv_Sm to tt
-  tt$sampleID <- Inv_Sm$sampleID
+  tt$sampleID <- sampID
   
   #Get the River, Station, and Date and merge with sampleID into River, Station, and Date in tt
-  taxaIDnames <- taxa %>% 
+  taxaIDnames <- taxaswe %>% 
     select(River, Station, Date, sampleID) %>% 
     unique()
   
@@ -238,10 +237,11 @@ nami <- function(dataClean){
   #Convert date to date class using lubridate
   tt$Date <- lubridate::ymd(tt$Date)
   
-  #convert tt to dataframe named tachet, and then change life cycle to m4_raw, resistance form to m5_raw, respiration to m6_raw, and pH to m7_raw
-  tachet <- as.data.frame(tt)
-  tachet <- tachet %>% 
-    dplyr::select(River, Station, Date, m4_raw = LifeCycle_grt1yr, m5_raw = ResForm_egg, m6_raw = Resp_pls, m7_raw = pHpref_grt5to5.5)
+  #Conver tt df to tachet df and change the namnes of the columns of lifecyle >1 year, resistance forms egg stages,
+  #respiration plastron, and pH preferendum >5-5.5 to m4_raw, m5_raw, m6_raw, and m7_raw
+  tachet <- tt %>% 
+    dplyr::select(River, Station, Date, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5.5to6) %>% 
+    rename(m4_raw = lifecycleduration_grtrthan1year, m5_raw = ResForms_eggs_statoblasts, m6_raw = resp_plastron, m7_raw = pHpreferendum_grtr5.5to6)
   
   #Get a mean of each of the metrics so that we get a metric value for each metric and each station
   #tachet <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
@@ -249,6 +249,7 @@ nami <- function(dataClean){
   #                      m5_raw = mean(ResForm_egg, na.rm = TRUE),
   #                      m6_raw = mean(Resp_pls, na.rm = TRUE),
   #                      m7_raw = mean(pHpref_grt5to5.5, na.rm = TRUE))
+  
   
   
   #Normalization Equations
