@@ -9,7 +9,7 @@
 
 lami <- function(dataClean){
   
-  lami1 <- left_join(dataClean, LAMIscoreswithoutspecies, by = c("Species"), multiple = 'any')
+  lami1 <- left_join(dataClean, LAMIscores, by = c("Species"), multiple = 'any')
   
   #Remove rows with no LAMI value
   lami1 <- lami1 %>% filter(!is.na(LAMIvalue))%>% 
