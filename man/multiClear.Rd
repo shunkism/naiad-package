@@ -19,11 +19,7 @@ MultiClear is comprised of four indices. These four indices are:
 \item Acid Water Indicator Community (AWIC) Index Scores
 \item NGIG-Adjusted Henriksson and Medins Index}
 
-The four indices are then combined into a single MMI using the following formula:
-
-\eqn{ \text{MultiClear} =  \frac{(\sum_n^k=1  M_{k}) }{n}}   
-
-where \eqn{M_{k}} is the kth metric, and n is the number of metrics.
+The four indices are then combined into a single MMI by calculating the mean of the four metrics.
 }
 \author{
 Shuntaro Koizumi, Gaute Velle
