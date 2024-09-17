@@ -9,10 +9,14 @@
 
 lami <- function(dataClean){
   
-  lami1 <- left_join(dataClean, LAMIscores, by = c("Species"), multiple = 'any')
+  #Remove sp. from Species
+  y <- LAMIscores %>% mutate(Species_clean = gsub(" sp.", "", Species))
+  
+  #Attach the LAMIvalue from LAMIscores rda to dataClean
+  lami_merge_spec <- left_join(dataClean, y, by = c("Species" = "Species_clean"))
   
   #Remove rows with no LAMI value
-  lami1 <- lami1 %>% filter(!is.na(LAMIvalue))%>% 
+  lami1 <- lami_merge_spec %>% filter(!is.na(LAMIvalue))%>% 
     distinct()
   
   
@@ -20,6 +24,6 @@ lami <- function(dataClean){
   LAMI <- lami1 %>% 
     group_by(River, Station, Date) %>% 
     summarise(LAMI = mean(LAMIvalue, na.rm = TRUE))
-
+  
   return(LAMI)
   }
