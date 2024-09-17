@@ -13,7 +13,7 @@
 #' 
 #' The four indices are then combined into a single MMI using the following formula:
 #' 
-#' \eqn{ \text{MultiClear} = } \frac{(\sum_n^k=1  M_{k}) }{n}   
+#' \eqn{ \text{MultiClear} =  \frac{(\sum_n^k=1  M_{k}) }{n}}   
 #' 
 #' where \eqn{M_{k}} is the kth metric, and n is the number of metrics.
 #' 
