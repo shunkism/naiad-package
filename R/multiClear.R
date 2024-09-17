@@ -17,6 +17,7 @@
 #' 
 #' where \eqn{M_{k}} is the kth metric, and n is the number of metrics.
 #' 
+#' 
 #' @param dataClean A dataframe output from cleanTax(). See ? cleanTax() for help.
 #' @export
 
