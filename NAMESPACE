@@ -3,6 +3,7 @@
 export(ASPT)
 export(cleanTax)
 export(f1f2)
+export(multiClear)
 export(nami)
 export(psi)
 export(rami)
