@@ -206,6 +206,7 @@ nami <- function(dataClean){
   
   #Make Tachet trait matrix with only life cycle >1 year, resistance forms egg stages, respiration plastron, and pH preferendum >5-5.5
   Inv_T <- taxaswe %>% 
+    ungroup() %>% 
     select(Species, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5to5.5)
   
   #Remove duplicated species
@@ -215,9 +216,10 @@ nami <- function(dataClean){
   Inv_T <- Inv_T[order(Inv_T$Species),]
   
   #Make Inv_T a matrix with row names as the species
-  rownames(Inv_T) <- Inv_T$Species
+  invTspecies <- Inv_T$Species
   Inv_T <- Inv_T[,-1]
   Inv_T <- as.matrix(Inv_T)
+  rownames(Inv_T) <- invTspecies
   
   tt <- FD::functcomp(Inv_T,Inv_Sm2)
   
