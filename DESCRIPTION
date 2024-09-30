@@ -16,4 +16,5 @@ Imports:
     tidyr,
     purrr,
     FD,
-    tools
+    tools,
+    stringr
