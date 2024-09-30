@@ -229,7 +229,7 @@ nami <- function(dataClean){
   
   # Step 9: Clean up Species names by extracting genus where applicable
   misstraits_fixed <- missing_traits %>%
-    mutate(Species = if_else(str_detect(Species, "^[A-Z][a-z]+ [a-z]+$"),
+    mutate(Species = if_else(stringr::str_detect(Species, "^[A-Z][a-z]+ [a-z]+$"),
                              word(Species, 1), Species))
   
   # Step 10: Rename specific species names to match sweTax
