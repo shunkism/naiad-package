@@ -184,6 +184,33 @@ nami <- function(dataClean){
   
   taxaswe$sampleID <- paste(taxaswe$River, taxaswe$Station, taxaswe$Date, sep = '_')
   
+  #Identify rows where there is NA in life cycle duration, resistance forms (eggs and stratoblasts), respiration plastron, and pH preferendum
+  missing_traits <- taxaswe %>%
+    filter(is.na(lifecycleduration_grtrthan1year) | is.na(ResForms_eggs_statoblasts) | is.na(resp_plastron) | is.na(pHpreferendum_grtr5to5.5))
+  
+  #Pull out relevant columns from allTaxa and rename the columns so that it matches the names of the columns in the taxaswe dataframe
+  allTaxa_simple <- allTaxa %>% 
+    select(Species, LifeCycle_grt1yr, ResForm_egg, Resp_pls, pHpref_grt5to5.5) %>% 
+    rename(lifecycleduration_grtrthan1year = LifeCycle_grt1yr, ResForms_eggs_statoblasts = ResForm_egg, resp_plastron = Resp_pls, pHpreferendum_grtr5to5.5 = pHpref_grt5to5.5)
+  
+  #Merge the allTaxa_simple dataframe with the missing rows
+  if (nrow(missing_traits) > 0) {
+    merged_missing <- missing_traits %>% 
+      select(Species) %>% 
+      left_join(allTaxa_simple, by = c('Species'))}
+  
+  #Convert merged_missing columns to numeric
+  merged_missing <- merged_missing %>% 
+    mutate(lifecycleduration_grtrthan1year = as.numeric(lifecycleduration_grtrthan1year),
+           ResForms_eggs_statoblasts = as.numeric(ResForms_eggs_statoblasts),
+           resp_plastron = as.numeric(resp_plastron),
+           pHpreferendum_grtr5to5.5 = as.numeric(pHpreferendum_grtr5to5.5))
+  
+  #Combine the two merged dataframes
+  taxaswe <- taxaswe %>% 
+    anti_join(missing_traits, by = 'Species') %>% 
+    bind_rows(merged_missing)
+  
   #Functional Composition Code Starts Here:
   Inv_Sm <-  taxaswe %>% 
     select(sampleID, Species, Value) 
@@ -197,7 +224,11 @@ nami <- function(dataClean){
   Inv_Sm <- Inv_Sm[order(Inv_Sm$Species),]
   
   Inv_Sm <-  tidyr::pivot_wider(Inv_Sm, names_from = Species, values_from = sumValue)
-  Inv_Sm[is.na(Inv_Sm)] = 0
+  
+  #Remove NAs and replace with 0 for numeric rows
+  Inv_Sm <- Inv_Sm %>% 
+    mutate(across(where(is.numeric), ~replace(., is.na(.), 0)))
+  
   sampID <- Inv_Sm$sampleID
   Inv_Sm <- Inv_Sm[,-1]
   

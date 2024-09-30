@@ -2,7 +2,7 @@
 % Please edit documentation in R/psi.R
 \name{psi}
 \alias{psi}
-\title{taxaCount Function}
+\title{Proportion of Sediment-sensitive Invertebrates (PSI)}
 \usage{
 psi(dataClean)
 }
@@ -10,7 +10,7 @@ psi(dataClean)
 \item{dataClean}{A dataframe output from cleanTax(). See ?cleanTax() for help.}
 }
 \description{
-Counts the number of Ephemeroptera, Plecoptera, Trichoptera, and all taxa
+Index designed to identify the degree of sedimentation in rivers and streams.
 }
 \author{
 Shuntaro Koizumi, Christian Bodin, Gaute Velle

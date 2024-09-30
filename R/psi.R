@@ -1,8 +1,8 @@
-#' taxaCount Function
+#'Proportion of Sediment-sensitive Invertebrates (PSI)
 #' 
 #'@author Shuntaro Koizumi, Christian Bodin, Gaute Velle 
 #' @description
-#' Counts the number of Ephemeroptera, Plecoptera, Trichoptera, and all taxa
+#' Index designed to identify the degree of sedimentation in rivers and streams.
 #' 
 #' 
 #' @param dataClean A dataframe output from cleanTax(). See ?cleanTax() for help. 
