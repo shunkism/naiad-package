@@ -129,9 +129,9 @@ nami <- function(dataClean){
   #Cleaning up the output of the dataframe so it just has the river, station, date, and the raw M2 columns 
   m2 <- bivTaxa %>% 
     dplyr::select(River, Station, Date, m2_raw) 
-
+  
   #Normalization equation 
-    m2$m2_std <- (m2$m2_raw - 0) / (2-0)
+  m2$m2_std <- (m2$m2_raw - 0) / (2-0)
   
   #Calibrate numbers so that values >1 equals 1 and values <0 equals 0
   m2$m2_std[m2$m2_std>1] = 1 
@@ -143,7 +143,7 @@ nami <- function(dataClean){
   
   #Remove the Leptophlebiids
   ephTaxa <- taxa[! taxa$Family=='LEPTOPHLEBIIDAE',]
-
+  
   #Remove rows that are just all NA
   ephTaxa <- ephTaxa[! is.na(ephTaxa$Value),]
   
@@ -174,7 +174,6 @@ nami <- function(dataClean){
   #The fuzzy coding available in the Freshwater Ecology Database have been converted to proportions so that values range from 0 to 1
   #For more information related to calculations for proportions contact Shuntaro Koizumi 
   
-  
   #STEPS TO PROPERLY MERGE THE TAXA DATAFRAME WITH THE SWE TAXONOMY DATAFRAME
   # Step 1: Join dataClean with sweTax
   taxaswe <- left_join(dataClean, sweTax, by = c('Species' = 'Vetenskapligt namn'), multiple = 'any')
@@ -192,37 +191,37 @@ nami <- function(dataClean){
   taxaswe <- taxaswe %>%
     select(Species, sampleID, Value, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5to5.5)
   
-#  # Step 4: Identify rows with missing trait data
-#  missing_traits <- taxaswe %>%
-#    filter(is.na(lifecycleduration_grtrthan1year) | 
-#             is.na(ResForms_eggs_statoblasts) | 
-#             is.na(resp_plastron) | 
-#             is.na(pHpreferendum_grtr5to5.5))
-#  
-#  # Step 5: Pull relevant columns from allTaxa and rename
-#  allTaxa_simple <- allTaxa %>%
-#    select(Species, LifeCycle_grt1yr, ResForm_egg, Resp_pls, pHpref_grt5to5.5) %>%
-#    rename(lifecycleduration_grtrthan1year = LifeCycle_grt1yr,
-#           ResForms_eggs_statoblasts = ResForm_egg,
-#           resp_plastron = Resp_pls,
-#           pHpreferendum_grtr5to5.5 = pHpref_grt5to5.5
-#    )
-#  
-#  # Step 6: Merge allTaxa_simple with missing traits if applicable
-#  if (nrow(missing_traits) > 0) {
-#    merged_missing <- missing_traits %>%
-#      select(Species, sampleID) %>%
-#      left_join(allTaxa_simple, by = "Species") %>%
-#      # Convert merged_missing columns to numeric
-#      mutate(across(c(lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, 
-#                      resp_plastron, pHpreferendum_grtr5to5.5), 
-#                    as.numeric))
-#    
-#    # Step 7: Replace the missing traits in taxaswe with merged_missing
-#    taxaswe <- taxaswe %>%
-#      anti_join(missing_traits, by = "Species") %>%
-#      bind_rows(merged_missing)
-#  }
+  # Step 4: Identify rows with missing trait data
+  missing_traits <- taxaswe %>%
+    filter(is.na(lifecycleduration_grtrthan1year) | 
+             is.na(ResForms_eggs_statoblasts) | 
+             is.na(resp_plastron) | 
+             is.na(pHpreferendum_grtr5to5.5))
+  
+  # Step 5: Pull relevant columns from allTaxa and rename
+  allTaxa_simple <- allTaxa %>%
+    select(Species, LifeCycle_grt1yr, ResForm_egg, Resp_pls, pHpref_grt5to5.5) %>%
+    rename(lifecycleduration_grtrthan1year = LifeCycle_grt1yr,
+           ResForms_eggs_statoblasts = ResForm_egg,
+           resp_plastron = Resp_pls,
+           pHpreferendum_grtr5to5.5 = pHpref_grt5to5.5
+    )
+  
+  # Step 6: Merge allTaxa_simple with missing traits if applicable
+  if (nrow(missing_traits) > 0) {
+    merged_missing <- missing_traits %>%
+      select(Species, sampleID, Value) %>%
+      left_join(allTaxa_simple, by = "Species") %>%
+      # Convert merged_missing columns to numeric
+      mutate(across(c(lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, 
+                      resp_plastron, pHpreferendum_grtr5to5.5), 
+                    as.numeric))
+    
+    # Step 7: Replace the missing traits in taxaswe with merged_missing
+    taxaswe <- taxaswe %>%
+      anti_join(missing_traits, by = "Species") %>%
+      bind_rows(merged_missing)
+  }
   
   # Step 8: Identify missing traits again
   missing_traits <- taxaswe %>%
@@ -257,9 +256,9 @@ nami <- function(dataClean){
   
   # Step 11: Merge misstraits_fixed with sweTax without duplicating columns
   misstraits_fixed <- misstraits_fixed %>%
-    select(Species, sampleID) %>%
+    select(Species, sampleID, Value) %>%
     left_join(sweTax, by = c('Species' = 'Vetenskapligt namn')) %>% 
-    select(Species, sampleID, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5to5.5)
+    select(Species, sampleID, Value, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5to5.5)
   
   
   # Combine updated misstraits_fixed with the main taxaswe
@@ -284,7 +283,6 @@ nami <- function(dataClean){
   #Remove NAs and replace with 0 for numeric rows
   Inv_Sm <- Inv_Sm %>% 
     mutate(across(where(is.numeric), ~replace(., is.na(.), 0)))
-  
   sampID <- Inv_Sm$sampleID
   Inv_Sm <- Inv_Sm[,-1]
   
