@@ -314,8 +314,8 @@ nami <- function(dataClean){
   tt$sampleID <- sampID
   
   #Get the River, Station, and Date and merge with sampleID into River, Station, and Date in tt
-  taxaIDnames <- taxaswe %>% 
-    select(River, Station, Date, sampleID) %>% 
+  taxaIDnames <- dataClean %>% 
+    select(River, Station, Date, sampleID = ID) %>% 
     unique()
   
   tt <- merge(tt,taxaIDnames,by = 'sampleID')
