@@ -249,8 +249,7 @@ nami <- function(dataClean){
                     "Tipuloidea" = "Diptera",
                     "Cylindrotomidae" = "Diptera",
                     "Anisoptera" = "Odonata",
-                    "Zygoptera" = "Odonata",
-                    "Acari" = "Hydrachnidiae")
+                    "Zygoptera" = "Odonata")
   
   misstraits_fixed <- misstraits_fixed %>%
     mutate(Species = recode(Species, !!!name_changes))
