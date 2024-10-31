@@ -29,7 +29,7 @@ F2 <- F1 %>%
     !is.na(Plecoptera) & Plecoptera > 0 & !is.na(Ephemeroptera),
     0.5 + (Ephemeroptera / Plecoptera),
     F1Station)) %>% 
-  dplyr::select(River, Station, Date, F1Station, F2)
+  dplyr::select(River, Station, Date, F2)
   
   F1F2 <- F1 %>% 
     dplyr::left_join(F2, by=c("Station", "Date", "River")) %>% 
