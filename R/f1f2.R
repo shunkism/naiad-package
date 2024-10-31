@@ -31,11 +31,11 @@ f1f2 <- function(dataClean){
 #    F1Station)) %>% 
 #  dplyr::select(River, Station, Date, F2)
 #  
-#  F1F2 <- F1 %>% 
+  F1F2 <- F1 %>% 
 #    dplyr::left_join(F2, by=c("Station", "Date", "River")) %>% 
-#    dplyr::select(River, Station, F1Station, F2, Date) %>% 
+    dplyr::select(River, Station, F1Station, Date) %>% 
 #    dplyr::group_by(Station, F1Station, F2, Date) %>% 
-#    dplyr::distinct()
+    dplyr::distinct()
   
-return(F1)  
+return(F1F2)  
   }
