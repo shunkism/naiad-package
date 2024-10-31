@@ -340,10 +340,10 @@ nami <- function(dataClean){
   
   
   #Normalization Equations
-  tachet$m4_std <- (tachet$m4_raw-0.091)/(0.321-0.091)
-  tachet$m5_std <- (tachet$m5_raw-0.012)/(0.258-0.012)
-  tachet$m6_std <- (tachet$m6_raw-0)/(0.051-0)
-  tachet$m7_std <- 1-((tachet$m7_raw-0.187)/(0.22-0.187))
+  tachet$m4_std <- (as.numeric(tachet$m4_raw)-0.091)/(0.321-0.091)
+  tachet$m5_std <- (as.numeric(tachet$m5_raw)-0.012)/(0.258-0.012)
+  tachet$m6_std <- (as.numeric(tachet$m6_raw)-0)/(0.051-0)
+  tachet$m7_std <- 1-((as.numeric(tachet$m7_raw)-0.187)/(0.22-0.187))
   
   #Calibrate metrics so that values >1 equals 1 and values <0 equals 0
   tachet$m4_std[tachet$m4_std>1] = 1 
