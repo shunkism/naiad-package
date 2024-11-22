@@ -1,9 +1,8 @@
 #' F1F2 Function
 #' 
-#'@author Shuntaro Koizumi, Christian Bodin, Gaute Velle 
+#' @author Shuntaro Koizumi, Christian Bodin, Gaute Velle 
 #' @description
 #' Returns F1F2 index values to a dataClean dataframe
-#' 
 #' 
 #' @param dataClean A dataframe output from cleanTax(). See ?cleanTax() for help. 
 #' @export
@@ -29,11 +28,20 @@ f1f2 <- function(dataClean) {
     dplyr::filter(!(F1 %in% c(0.5, 0.25, 1) & Orden == "Plecoptera")) %>%
     dplyr::filter(!(F1 %in% c(0.5, 0.25, 0) & Orden == "Ephemeroptera")) %>%
     dplyr::summarise(totvalue = sum(Value, na.rm = TRUE), .groups = 'drop') %>%
-    tidyr::pivot_wider(names_from = Orden, values_from = totvalue, values_fill = 0) %>%
+    tidyr::pivot_wider(
+      names_from = Orden,
+      values_from = totvalue,
+      values_fill = list(totvalue = 0)  # Fill missing columns with 0
+    ) %>%
+    dplyr::mutate(
+      Plecoptera = coalesce(Plecoptera, 0),  # Ensure Plecoptera column exists
+      Ephemeroptera = coalesce(Ephemeroptera, 0)  # Ensure Ephemeroptera column exists
+    ) %>%
     dplyr::mutate(F2 = dplyr::case_when(
-      !is.na(Plecoptera) & Plecoptera > 0 & !is.na(Ephemeroptera) ~ 0.5 + (Ephemeroptera / Plecoptera),
-      TRUE ~ F1Station  # Default to F1Station if conditions aren’t met
+      Plecoptera > 0 ~ 0.5 + (Ephemeroptera / Plecoptera),
+      TRUE ~ F1Station  # Default to F1Station if Plecoptera is zero or missing
     )) %>%
+    dplyr::mutate(F2 = ifelse(F2 > 1.0, 1.0, F2)) %>%  # Cap F2 at 1.0
     dplyr::select(River, Station, Date, F2)
   
   # Join F1 and F2 results, select relevant columns, and return unique records

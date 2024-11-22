@@ -24,7 +24,7 @@ ASPT <- function(dataClean){
                                    ASPTeqr>0.87 & ASPTeqr<=0.99 ~ "Good",
                                    ASPTeqr>0.75 & ASPTeqr<=0.87 ~ "Moderate",
                                    ASPTeqr>0.64 & ASPTeqr<=0.75 ~ "Poor",
-                                   ASPTeqr<0.64 ~ "Very Poor"))) %>%
+                                   ASPTeqr=<0.64 ~ "Very Poor"))) %>%
     select(River, Station, Date, BMWP, ASPT, ASPTeqr, ASPTEQC)
   
   return(Bmwp.aspt)
