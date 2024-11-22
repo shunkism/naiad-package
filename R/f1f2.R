@@ -34,8 +34,8 @@ f1f2 <- function(dataClean) {
       values_fill = list(totvalue = 0)  # Fill missing columns with 0
     ) %>%
     dplyr::mutate(
-      Plecoptera = coalesce(Plecoptera, 0),  # Ensure Plecoptera column exists
-      Ephemeroptera = coalesce(Ephemeroptera, 0)  # Ensure Ephemeroptera column exists
+      Plecoptera = ifelse("Plecoptera" %in% colnames(.), Plecoptera, 0),  # Handle missing Plecoptera column
+      Ephemeroptera = ifelse("Ephemeroptera" %in% colnames(.), Ephemeroptera, 0)  # Handle missing Ephemeroptera column
     ) %>%
     dplyr::mutate(F2 = dplyr::case_when(
       Plecoptera > 0 ~ 0.5 + (Ephemeroptera / Plecoptera),
