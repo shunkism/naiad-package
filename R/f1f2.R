@@ -19,7 +19,7 @@ f1f2 <- function(dataClean) {
   # Calculate F1Station as the max F1 per station and date
   F1 <- F1 %>%
     dplyr::group_by(Station, Date) %>%
-    dplyr::mutate(F1Station = ifelse(all(is.na(F1)), NA, max(F1, na.rm = TRUE)))
+    dplyr::mutate(F1Station = ifelse(all(is.na(F1)), 0, max(F1, na.rm = TRUE)))
   
   # Calculate F2 index, considering only certain species in Plecoptera and Ephemeroptera orders
   F2 <- F1 %>%
