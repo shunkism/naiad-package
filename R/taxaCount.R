@@ -9,13 +9,27 @@
 #' @export
 
 taxaCount <- function(dataClean){
-taxa <- left_join(dataClean, All.Indices, by = c('Species' = 'Taxa'))
   
-  taxacount <- plyr::ddply(taxa, c('River','Station','Date'),summarize,
-                    Ephemeroptera_TaxaN = length(unique(Species[Order == 'Ephemeroptera'])),
-                    Plecoptera_TaxaN = length(unique(Species[Order == 'Plecoptera'])),
-                    Trichoptera_TaxaN = length(unique(Species[Order == 'Trichoptera'])),
-                    EPT_TaxaN = sum(Ephemeroptera_TaxaN, Plecoptera_TaxaN,Trichoptera_TaxaN),
-                    All_TaxaN = length(unique(Species)))
+  TaxOrd <- All.Indices %>% select(Order, Taxa)  %>% 
+    filter(! is.na(Order)) %>% distinct()
+  
+  taxa <- dataClean %>% left_join(TaxOrd, by = c('Species' = 'Taxa')) %>% 
+    mutate(Order = case_when(Species == "Ephemeroptera" ~ "Ephemeroptera",
+                             Species == "Trichoptera" ~ "Trichoptera",
+                             Species == "Plecoptera" ~ "Plecoptera", 
+                             TRUE ~ Order))
+  
+  
+  taxacount <- taxa %>%
+    group_by(River, Station, Date) %>%
+    summarise(
+      Ephemeroptera_TaxaN = n_distinct(Species[Order == 'Ephemeroptera'], na.rm = TRUE),
+      Plecoptera_TaxaN = n_distinct(Species[Order == 'Plecoptera'], na.rm = TRUE),
+      Trichoptera_TaxaN = n_distinct(Species[Order == 'Trichoptera'], na.rm = TRUE),
+      EPT_TaxaN = n_distinct(Species[Order %in% c('Ephemeroptera', 'Plecoptera', 'Trichoptera')], na.rm = TRUE),
+      All_TaxaN = n_distinct(Species),
+      .groups = "drop"
+    )
+  
   return(taxacount)
 }

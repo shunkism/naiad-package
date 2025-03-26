@@ -32,11 +32,13 @@ f1f2 <- function(dataClean) {
       names_from = Orden,
       values_from = totvalue,
       values_fill = list(totvalue = 0)  # Fill missing columns with 0
-    ) %>%
-    dplyr::mutate(
-      Plecoptera = ifelse("Plecoptera" %in% colnames(.), Plecoptera, 0),  # Handle missing Plecoptera column
-      Ephemeroptera = ifelse("Ephemeroptera" %in% colnames(.), Ephemeroptera, 0)  # Handle missing Ephemeroptera column
-    ) %>%
+    ) 
+  
+  # Add columns if they are missing
+  if (!"Plecoptera" %in% names(F2)) F2$Plecoptera <- 0
+  if (!"Ephemeroptera" %in% names(F2)) F2$Ephemeroptera <- 0
+  
+  F2 <-  F2  %>%
     dplyr::mutate(F2 = dplyr::case_when(
       Plecoptera > 0 ~ 0.5 + (Ephemeroptera / Plecoptera),
       TRUE ~ F1Station  # Default to F1Station if Plecoptera is zero or missing
