@@ -33,5 +33,5 @@ lami <- function(dataClean){
     group_by(River, Date) %>% 
     summarise(LAMI = mean(LAMIvalue))
   
-  return(LAMI)
+  return(LAMI_dat)
   }
