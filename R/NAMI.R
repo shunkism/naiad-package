@@ -59,8 +59,8 @@ nami <- function(dataClean){
   ID <- unique(dataClean$ID)
   
   #This basically pastes all the unique taxa groups that are expected based on the allTaxa dataframe and pastes them to each individual station
-  #This is necessary to "create" zeroes for taxa that might not be observed in either the initial inputted dataframe or in individual stations
-  
+  #This is necessary to "create" zeroes for taxa groups that might not be observed in either the initial inputted dataframe or in individual stations
+  #"Taxa groups can be viewed by using data(allTaxa), but basically just contains higher taxonomic classification, which is usually Order (at least for insects) 
   taxalist <- unique(allTaxa$Taxagroup)
   
   taxaID <- data.frame()
@@ -70,7 +70,9 @@ nami <- function(dataClean){
   }
   
   #Merge the dataClean dataframe with the allTaxa rda file
-  taxa <- left_join(dataClean, allTaxa, by = c('Species'), multiple = 'any')
+  taxa <- left_join(dataClean, allTaxa, by = c('Species'), multiple = 'any') #multiple = "any" might cause some issues, double check that this works okay with duplicate species in allTaxa
+  
+  #The above works for our data because we have made sure that all the taxa that we need are in allTaxa but there may be cases that people find species that are not in the list. In this case, we will need to update allTaxa to incorporate the missing taxa
   
   #Get a total number of individuals per taxa group 
   taxacount <- plyr::ddply(taxa, c('River','Station','Date','Taxagroup'), summarize,
@@ -85,13 +87,13 @@ nami <- function(dataClean){
   
   #Get a sum of the abundances that exist in the taxa dataframe (the merged dataclean and alltaxa dfs)
   countsum <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
-                          sumValue = sum(Value))
+                          sumValue_all = sum(Value)) 
   
   #Merging the sum of abundances with the new taxacount that has the zero abundances
   taxacountsum <- left_join(taxacount, countsum, by = c('River','Station','Date'))
   
   #Get a percentage (relative abundance) of each taxa vs. the total abundance within each station 
-  taxacountsum$perc <- (taxacountsum$sumValue.x / taxacountsum$sumValue.y)*100 
+  taxacountsum$perc <- (taxacountsum$sumValue / taxacountsum$sumValue_all)*100 
   
   #make a df that has only gastropods, bivalves, and crustaceans 
   gastBivCrus <- taxacountsum[taxacountsum$Taxagroup == 'Gastropoda' | taxacountsum$Taxagroup == 'Bivalvia' | taxacountsum$Taxagroup == 'Crustacea',]
@@ -101,7 +103,7 @@ nami <- function(dataClean){
                     m1_raw = sum(perc))
   
   #normalization equation
-  m1$m1_std <- (m1$m1_raw - 0) / (18.225-0)
+  m1$m1_std <- (m1$m1_raw - 0) / (18.225-0) #Normalization values from Carlson et al. 2023
   
   #Calibrate numbers so that values >1 equals 1 and values <0 equals 0
   m1$m1_std[m1$m1_std>1] = 1 
@@ -109,13 +111,15 @@ nami <- function(dataClean){
   
   #Metric 2: Number of Bivalvia Taxa
   #Requires a similar list of higher taxonomic order to merge with dataClean. Thankfully we already did this in
-  #the previous metric, so we can use the same procedure.
+  #the previous metric, so we can use the same procedure and dataframe.
   #Have to make sure that we include zero counts, the same way we did for metric 1. 
   
   #summarize taxa dataframe into the number of unique species in each station
   bivTaxa <- plyr::ddply(taxa, c('River','Station','Date','Taxagroup'), summarize,
-                         countTaxa = length(unique(Species)))
-  
+                         countTaxa = length(unique(Species))) 
+  #An issue with this metric and the above code that can arise here is that there could be a single taxa but they are being identified to a different resolution 
+  #(e.g. the same taxa is being identified to Planorbidae and Bivalvia in the same sample will result in two taxa when it is actually just one)
+
   #merge the above df with the taxaID df to get the zeroes 
   bivTaxa <-merge(bivTaxa,taxaID,all.y = TRUE)
   bivTaxa$countTaxa[is.na(bivTaxa$countTaxa)] = 0
@@ -131,7 +135,7 @@ nami <- function(dataClean){
     dplyr::select(River, Station, Date, m2_raw) 
   
   #Normalization equation 
-  m2$m2_std <- (m2$m2_raw - 0) / (2-0)
+  m2$m2_std <- (m2$m2_raw - 0) / (2-0) #Normalization values from Carlson et al. 2023
   
   #Calibrate numbers so that values >1 equals 1 and values <0 equals 0
   m2$m2_std[m2$m2_std>1] = 1 
@@ -164,7 +168,7 @@ nami <- function(dataClean){
     dplyr::select(River, Station, Date, m3_raw) 
   
   #Normalization equation 
-  m3$m3_std <- (m3$m3_raw - 0) / (8.9 - 0)  
+  m3$m3_std <- (m3$m3_raw - 0) / (8.9 - 0) # Normalization values from Carlson et al. 2023
   
   #Calibrate numbers so that values >1 equals 1 and values <0 equals 0
   m3$m3_std[m3$m3_std>1] = 1 
@@ -176,7 +180,7 @@ nami <- function(dataClean){
   
   #STEPS TO PROPERLY MERGE THE TAXA DATAFRAME WITH THE SWE TAXONOMY DATAFRAME
   # Step 1: Join dataClean with sweTax
-  taxaswe <- left_join(dataClean, sweTax, by = c('Species' = 'Vetenskapligt namn'), multiple = 'any')
+  taxaswe <- left_join(dataClean, sweTax, by = c('Species' = 'Vetenskapligt namn'), multiple = 'any') #Double check that multiple = "any" doesn't do anything to duplicated species in sweTax
   
   # Step 2: Convert relevant metrics to numeric
   taxaswe$lifecycleduration_grtrthan1year <- as.numeric(taxaswe$lifecycleduration_grtrthan1year)
@@ -198,7 +202,8 @@ nami <- function(dataClean){
              is.na(resp_plastron) | 
              is.na(pHpreferendum_grtr5to5.5))
   
-  # Step 5: Pull relevant columns from allTaxa and rename
+  # Step 5: Pull relevant columns from allTaxa and rename. 
+  #For taxa that can't be found in Peter's trait file (sweTax) we will use the one we pulled from freshwaterecology.info that have been converted into 0:1 proportions from fuzzy coding
   allTaxa_simple <- allTaxa %>%
     select(Species, LifeCycle_grt1yr, ResForm_egg, Resp_pls, pHpref_grt5to5.5) %>%
     rename(lifecycleduration_grtrthan1year = LifeCycle_grt1yr,
@@ -270,7 +275,7 @@ nami <- function(dataClean){
   Inv_Sm <-  taxaswe %>% 
     select(sampleID, Species, Value) 
   
-  #There seems to be some duplication, add up the counts for duplicated taxa for different sample statsasions 
+  #There seems to be some duplication, add up the counts for duplicated taxa for different sample stations 
   Inv_Sm <- plyr::ddply(Inv_Sm, c('sampleID','Species'),summarize,
                         sumValue = sum(Value))
   
@@ -306,6 +311,7 @@ nami <- function(dataClean){
   Inv_T <- as.matrix(Inv_T)
   rownames(Inv_T) <- invTspecies
   
+  #Functional Composition measured by the community level weighted means of trait values, from FD package
   tt <- FD::functcomp(Inv_T,Inv_Sm2)
   
   #Reattach the sampleID from Inv_Sm to tt
@@ -329,15 +335,6 @@ nami <- function(dataClean){
   tachet <- tt %>% 
     dplyr::select(River, Station, Date, lifecycleduration_grtrthan1year, ResForms_eggs_statoblasts, resp_plastron, pHpreferendum_grtr5to5.5) %>% 
     rename(m4_raw = lifecycleduration_grtrthan1year, m5_raw = ResForms_eggs_statoblasts, m6_raw = resp_plastron, m7_raw = pHpreferendum_grtr5to5.5)
-  
-  #Get a mean of each of the metrics so that we get a metric value for each metric and each station
-  #tachet <- plyr::ddply(taxa, c('River','Station','Date'), summarize,
-  #                      m4_raw = mean(LifeCycle_grt1yr, na.rm = TRUE),
-  #                      m5_raw = mean(ResForm_egg, na.rm = TRUE),
-  #                      m6_raw = mean(Resp_pls, na.rm = TRUE),
-  #                      m7_raw = mean(pHpref_grt5to5.5, na.rm = TRUE))
-  
-  
   
   #Normalization Equations
   tachet$m4_std <- (as.numeric(tachet$m4_raw)-0.091)/(0.321-0.091)
