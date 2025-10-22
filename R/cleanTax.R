@@ -1,6 +1,6 @@
 #' cleanTax Function
 #' 
-#' @author Shuntaro Koizumi, Christian Lucien Bodin, Gaute Velle 
+#' @author Shuntaro Koizumi, Christian Lucien Bodin
 #'
 #' @description
 #' Cleans dataframe based on a list of tax. For the list of taxa use data(Taxonomy).
