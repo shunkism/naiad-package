@@ -1,6 +1,6 @@
 #' cleanTax Function
 #' 
-#' @author Shuntaro Koizumi, Christian Bodin, Gaute Velle 
+#' @author Shuntaro Koizumi, Christian Lucien Bodin, Gaute Velle 
 #'
 #' @description
 #' Cleans dataframe based on a list of tax. For the list of taxa use data(Taxonomy).
@@ -10,7 +10,6 @@
 #' @returns ErrorList is a list of removed names from the original dataframe
 #' 
 #' @export
-
 
 cleanTax <- function(datain) {
   
