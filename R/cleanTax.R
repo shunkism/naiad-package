@@ -24,14 +24,14 @@ cleanTax <- function(datain) {
   datain$Species <- gsub("\\s*/\\s*", "/", datain$Species) # remove spaces before and after slashes
   
   # Create a mapping of corrected names using amatch
-  correct_names <- stringdist::amatch(datain$Species, Taxonomy$Species, maxDist = 2)
+  correct_names <- stringdist::amatch(datain$Species, Taxonomy2$Species, maxDist = 2)
   
   # Remove unmatched names and return a list of removed names
   removed_names <- unique(datain$Species[is.na(correct_names)])
   datain <- datain[!is.na(correct_names),]
   
   # Replace species names with corrected names
-  datain$Species <- Taxonomy$Species[correct_names[!is.na(correct_names)]]
+  datain$Species <- Taxonomy2$Species[correct_names[!is.na(correct_names)]]
   datain <- datain[,! names(datain) %in% "Original_Species"]    
   # Return the cleaned up dataframe and list of removed names
   list2env(list(dataClean = datain, ErrorList = removed_names),envir = .GlobalEnv)
