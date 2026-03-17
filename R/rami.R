@@ -30,7 +30,7 @@ rami <- function(dataClean){
            bottom=Wk*hk) %>% 
     group_by(River, Station, Date) %>% 
     dplyr::summarise(top=sum(top, na.rm=T), bottom=sum(bottom, na.rm=T)) %>% 
-    mutate(rami=top/bottom)
+    mutate(rami=ifelse(bottom == 0, 0, top/bottom))
   
   Ramiresult<-Rami %>% 
     group_by(River, Date) %>% 
