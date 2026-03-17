@@ -23,33 +23,21 @@ F1 <- F1 %>%
 
 # Calculate F2 index, considering only certain species in Plecoptera and Ephemeroptera orders
 F2 <- F1 %>%
-  dplyr::filter(Orden %in% c("Plecoptera", "Ephemeroptera")) %>%
-  dplyr::group_by(River, Station, Date, Orden) %>%
-  dplyr::filter(!(F1 %in% c(0.5, 0.25, 1) & Orden == "Plecoptera")) %>%
-  dplyr::filter(!(F1 %in% c(0.5, 0.25, 0) & Orden == "Ephemeroptera")) %>%
-  dplyr::summarise(totvalue = sum(Value, na.rm = TRUE),
-                   F1Station = dplyr::first(F1Station),
-                   .groups = 'drop') %>%
-  tidyr::pivot_wider(
-    names_from = Orden,
-    values_from = totvalue,
-    values_fill = list(totvalue = 0)  # Fill missing columns with 0
-  ) 
-  # Add columns if they are missing
-  if (!"Plecoptera" %in% names(F2)) F2$Plecoptera <- 0
-  if (!"Ephemeroptera" %in% names(F2)) F2$Ephemeroptera <- 0
-  
-F2 <- F2 %>%
-  dplyr::mutate(
-    Plecoptera = dplyr::coalesce(Plecoptera, 0),
-    Ephemeroptera = dplyr::coalesce(Ephemeroptera, 0),
-    F2 = dplyr::case_when(
-      Plecoptera > 0 & Ephemeroptera > 0 ~ 0.5 + (Ephemeroptera / Plecoptera),
-      TRUE ~ F1Station
-    ),
-    F2 = pmin(F2, 1.0)
+  dplyr::group_by(River, Station, Date) %>%        # Work at station-date level
+  dplyr::summarise(
+    F1Station = dplyr::first(F1Station),           # Carry station-level F1
+    Plecoptera = sum(Value[Orden == "Plecoptera" & F1 == 0], na.rm = TRUE),   # Count qualifying Plecoptera
+    Ephemeroptera = sum(Value[Orden == "Ephemeroptera" & F1 == 1], na.rm = TRUE), # Count qualifying Ephemeroptera
+    .groups = "drop"                               # Remove grouping
   ) %>%
-  dplyr::select(River, Station, Date, F2)
+  dplyr::mutate(
+    F2 = dplyr::case_when(
+      Plecoptera > 0 & Ephemeroptera > 0 ~ 0.5 + (Ephemeroptera / Plecoptera), # Compute F2 if both present
+      TRUE ~ F1Station                                                        # Otherwise use F1Station
+    ),
+    F2 = pmin(F2, 1.0)                           # Cap F2 at 1
+  ) %>%
+  dplyr::select(River, Station, Date, F2)        # Keep only output columns
   
   
   # Join F1 and F2 results, select relevant columns, and return unique records
