@@ -38,13 +38,16 @@ f1f2 <- function(dataClean) {
   if (!"Plecoptera" %in% names(F2)) F2$Plecoptera <- 0
   if (!"Ephemeroptera" %in% names(F2)) F2$Ephemeroptera <- 0
   
-  F2 <-  F2  %>%
-    dplyr::mutate(F2 = dplyr::case_when(
-      Plecoptera > 0 ~ 0.5 + (Ephemeroptera / Plecoptera),
-      TRUE ~ F1Station  # Default to F1Station if Plecoptera is zero or missing
-    )) %>%
-    dplyr::mutate(F2 = ifelse(F2 > 1.0, 1.0, F2)) %>%  # Cap F2 at 1.0
-    dplyr::select(River, Station, Date, F2)
+  F2 <- F2 %>%
+  dplyr::mutate(
+    F2 = dplyr::case_when(
+      Plecoptera > 0 & Ephemeroptera > 0 ~ 0.5 + (Ephemeroptera / Plecoptera), #Return F1 Station if either group is missing
+      TRUE ~ F1Station
+    ),
+    F2 = pmin(F2, 1.0)
+  ) %>%
+  dplyr::select(River, Station, Date, F2)
+  
   
   # Join F1 and F2 results, select relevant columns, and return unique records
   F1F2 <- F1 %>%
