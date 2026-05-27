@@ -27,5 +27,15 @@ ASPT <- function(dataClean){
                                    ASPTeqr<=0.64 ~ "Very Poor"))) %>%
     select(River, Station, Date, BMWP, ASPT, ASPTeqr, ASPTEQC)
   
+  missing_taxa <- ASPTdf %>%
+    filter(is.na(scientificNameID)) %>%
+    pull(Species) %>%
+    unique()
+  
+  if (length(missing_taxa) > 0) {
+    message("Note! These taxa are not being included in the analysis because they are not registered in the rami.families dataframe:")
+    message(paste(" -", missing_taxa, collapse = "\n"))
+  }
+  
   return(Bmwp.aspt)
 }
