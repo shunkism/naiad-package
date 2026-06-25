@@ -23,13 +23,27 @@ taxaCount <- function(dataClean){
   taxacount <- taxa %>%
     group_by(River, Station, Date) %>%
     summarise(
-      Ephemeroptera_TaxaN = n_distinct(Species[Order == 'Ephemeroptera'], na.rm = TRUE),
-      Plecoptera_TaxaN = n_distinct(Species[Order == 'Plecoptera'], na.rm = TRUE),
-      Trichoptera_TaxaN = n_distinct(Species[Order == 'Trichoptera'], na.rm = TRUE),
-      EPT_TaxaN = n_distinct(Species[Order %in% c('Ephemeroptera', 'Plecoptera', 'Trichoptera')], na.rm = TRUE),
-      All_TaxaN = n_distinct(Species),
+      Ephemeroptera_TaxaN = n_distinct(na.omit(Species[Order == 'Ephemeroptera'])),
+      Plecoptera_TaxaN = n_distinct(na.omit(Species[Order == 'Plecoptera'])),
+      Trichoptera_TaxaN = n_distinct(na.omit(Species[Order == 'Trichoptera'])),
+      EPT_TaxaN = n_distinct(na.omit(Species[Order %in% c('Ephemeroptera', 'Plecoptera', 'Trichoptera')])),
+      All_TaxaN = n_distinct(na.omit(Species)),
       .groups = "drop"
     )
+  
+  taxacount_rivertotal <- taxa %>%
+    group_by(River, Date) %>%
+    summarise(
+      LocationTotal_Ephemeroptera_TaxaN = n_distinct(na.omit(Species[Order == 'Ephemeroptera'])),
+      LocationTotal_Plecoptera_TaxaN = n_distinct(na.omit(Species[Order == 'Plecoptera'])),
+      LocationTotal_Trichoptera_TaxaN = n_distinct(na.omit(Species[Order == 'Trichoptera'])),
+      LocationTotal_EPT_TaxaN = n_distinct(na.omit(Species[Order %in% c('Ephemeroptera', 'Plecoptera', 'Trichoptera')])),
+      LocationTotal_All_TaxaN = n_distinct(na.omit(Species)),
+      .groups = "drop"
+    )
+  
+  taxacount <- taxacount %>% 
+    left_join(taxacount_rivertotal, by = c("River", "Date"))
   
   return(taxacount)
 }
