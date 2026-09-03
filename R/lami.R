@@ -18,7 +18,7 @@ lami <- function(dataClean){
     distinct()
   
   #Remove sp. from Species
-  y <- LAMIscores %>% mutate(Species_clean = gsub(" sp.", "", Species))
+  y <- LAMIscores %>% mutate(Species_clean = gsub(" sp\\.$", "", Species))
   
   #Attach the LAMIvalue from LAMIscores rda to dataClean
   lami_merge_spec <- left_join(dataClean, y, by = c("Species" = "Species_clean"))
